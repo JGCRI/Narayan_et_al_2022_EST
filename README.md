@@ -1,41 +1,38 @@
-[![DOI](https://zenodo.org/badge/265119113.svg)](https://zenodo.org/badge/latestdoi/265119113)
+_your zenodo badge here_
 
-# metarepo
-Template repository for a single point of access meta-repository to reproduce an experiment
+# Narayan_etal_2022_ERL
 
-## Purpose
-A meta-repository creates a single point of access for someone to find all of the components that were used to create a published work for the purpose of reproducibility.  This repository should contain references to all minted data and software as well as house any ancillary code used to transform the source data, create figures for your publication, conduct the experiment, and / or execute the contributing software.
+**Evaluation of uncertainties in the anthropogenic SO2 emissions in the USA from NASA's OMI point source catalog**
 
-## Using the template
-Simply click `Use this template` on the main repository page (shows up to the left of `Clone or download`) and fill in your `Repository name`, the `Description`, select whether you want the repository to be `Public` or `Private`, and leave `Include all branches` unchecked.
+Kanishka Narayan<sup>1\*</sup>,Steven J Smith <sup>1</sup>,
+,Vitali E. Fioletov <sup>2</sup> & Chris A. McLinden <sup>2</sup>
 
-## Naming your meta-repository
-The following naming conventions should be used when naming your repository:  
-- Single author:  `lastname_year_journal`
-- Multi author:  `lastname-etal_year_journal`
-- Multiple publications in the same journal:  `lastname-etal_year-letter_journal` (e.g., `human-etal_2020-b_nature`)
+<sup>1 </sup> Joint Global Change Research Institute, Pacific Northwest National Lab, Washington DC, USA 
 
-## Customize your `.gitignore` file
-A general `.gitignore` for use with Python or R development is included.  However, you may wish to customize this to the needs of your project.  The `.gitignore` file lets Git know what to push to the remote repository and what needs to be ignored and stay local.
+<sup>2 </sup> Air Quality Research Division, Environment and Climate Change Canada, Toronto, Canada 
 
-## Suggestions
-- Don't bog down your repository with a bunch of raw data.  Instead archive and mint a DOI for your data and provide the reference in this repository with instructions for use.
-- Create complete and tested documentation for how to use what is in this repository to reproduce your experiment.
 
-## Creating a minted release for your meta-repository
-It is important to version and release your meta-repository as well due to changes that may occur during the publication review process.  If you do not know how to conduct a release on GitHub when linked with Zenodo, please contact chris.vernon@pnnl.gov to get set up.  
+\* corresponding author:  kanishka.narayan@pnnl.gov
 
-## The meta-repository markdown template
-A sample meta-repository template is provided in this repository in the file `metarepo_template.md`.  
+## Abstract
+While SO2 emissions are an important driver of air pollution and have a significant impact on radiative forcing, not all large sources around the world are included in high quality emission inventories. Satellite remote sensing is a promising method of monitoring emissions from such sources that may be missing in inventories. We evaluated the uncertainties in anthropogenic sulfur dioxide (SO2) emissions from the OMI satellite measurements for the contiguous US using high quality emissions inventory data. Specifically, we evaluated uncertainties in OMI measurements from NASA's OMI point source catalog for different dimensions including uncertainties from emission sources that are undetected by the satellite, uncertainties introduced by small emitters, uncertainties from the composition of the emissions (powerplants vs non powerplants) etc. For sources that are detected by the satellite, we find that errors in aggregate (total of all detected sources) are relatively low. Moreover, errors are lowest when looking at comprehensive inventories i.e., inventories that include both powerplant and non-powerplant sources. Errors for individual sources can be substantial, however, with over or under-estimates ranging from -90% to +500% (roughly 10 - 90th percentile) in an asymmetric distribution with a long tail. We find that these errors are not necessarily random over time and that there can be consistent positive or negative biases for many sources over time.  We find, as expected, that emission sources not detected by the satellite are the largest aggregate source of difference between the satellite estimates and inventories, especially in more recent years where source emission sizes have been decreasing. This analysis of uncertainties provides information on the error structure of the OMI measurements, which is a useful guide when using this data for research and assessment.
 
-To use it, do the following:
-1. Create the template repository as mentioned above in [Using the template](#using-the-template)
-2. Clone your new repository to you local machine
-3. Change directories into your new meta-repository directory you just cloned
-4. Run `git rm README.md` to delete this file (`README.md`) and commit it using `git commit -m 'remove instructions'`
-5. Rename `metarepo_template.md` as `README.md`
-6. Run `git add README.md` to stage the new file that will show up on load in your remote GitHub repository
-7. Run `git rm metarepo_template.md` to remove the original template
-8. Run `git commit -m 'set up new template as readme'` to set the changes
-9. Run `git push` to send the changes to your remote GitHub repository
-10. Modify the `README.md` file to represent your experiement and use the `add`, `commit`, `push` workflow to update your remote repository
+
+
+
+## Data reference
+
+### Input data
+Available at zenodo here- 
+Human, I.M. (2021). My input dataset name [Data set]. DataHub. https://doi.org/some-doi-number
+
+
+
+
+## Reproduce my experiment
+To reproduce the results and figures shown in Narayan et al.,
+
+1. Install `R` here - https://www.r-project.org/
+2. Install `R studio` from here - https://www.rstudio.com/
+3. Download input data from- and place in folder `code_to_create_figures/OMI_Data_Mapping/Data/`
+4. Run the script called `Replicating paper figures&results.rmd` from the folder `code_to_create_figures/` chunk by chunk to generate relevant figures.  
