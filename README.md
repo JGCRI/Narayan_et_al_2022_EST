@@ -24,15 +24,12 @@ While SO2 emissions are an important driver of air pollution and have a signific
 
 ### Input data
 Available at zenodo here- 
-Human, I.M. (2021). My input dataset name [Data set]. DataHub. https://doi.org/some-doi-number
-
-
-
+Kanishka Narayan, & Steven Smith. (2021). Input data for Narayan et al 2022. (0.1.0) [Data set]. Zenodo. https://doi.org/10.5281/zenodo.5809677
 
 ## Reproduce my experiment
 To reproduce the results and figures shown in Narayan et al.,
 
 1. Install `R` here - https://www.r-project.org/
 2. Install `R studio` from here - https://www.rstudio.com/
-3. Download input data from- and place in folder `code_to_create_figures/OMI_Data_Mapping/Data/`
+3. Download input data from-https://doi.org/10.5281/zenodo.5809677 and place in folder `code_to_create_figures/OMI_Data_Mapping/Data/`
 4. Run the script called `Replicating paper figures&results.rmd` from the folder `code_to_create_figures/` chunk by chunk to generate relevant figures.  
