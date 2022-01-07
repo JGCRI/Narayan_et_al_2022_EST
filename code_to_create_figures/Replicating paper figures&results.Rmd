@@ -605,7 +605,7 @@ Nei_Data_Mean %>%
   group_by(PlantName) %>% 
   mutate(Average_Emissions_KT=mean(ValuefromNEIinKT)) %>%
   ungroup() %>%
-  filter(PlantName %in% c(unique(tmp$PlantName))) %>% 
+  filter(PlantName %in% c(unique(tmp_NEI$PlantName))) %>% 
   group_by(PlantName) %>% 
   mutate(Error_Term=sum(Error)/sum(abs(Error)),
          count = sum(Obs)) %>% 
@@ -651,7 +651,7 @@ Nei_Data_Mean %>%
   #Now, let's filter out on the basis of the criteria. Average emissions should be over 20 kt & you should
   #have at least 3 observations
   #filter(avg_em>20) %>%
-  #filter(obs_count>=3) %>%
+  filter(obs_count>=3) %>%
   mutate(Error_percent= (Error/avg_em)*100, source="NEI",Valueplant = ValuefromNEIinKT) %>% 
   #Now let's calculate the data for the plot
   select(PlantName,Error,Error_percent,source) %>%
@@ -676,8 +676,8 @@ g <- ggplot()+
      geom_histogram(data= plot_data, aes(x=Error_percent, y = ..density..),fill = "white",color="black", bins = 20)+
   geom_density(data= plot_data, aes(x=Error_percent, y = ..density..),color="red", size = 1.2)+
   geom_line(data= draw_d, aes(x=Error_percent, y=density),color="blue", linetype = "dashed", size = 1.2)+
-  xlab("Percent error")+
-  xlim(-160,300)+
+  xlab("Mean percent error")+
+  xlim(-150,300)+
   ggtitle("Density plot of percent error for all detected sources in the NEI inventory")+
   labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")
 g+scheme_basic
