@@ -618,7 +618,7 @@ Nei_Data_Mean %>%
 
 
 tmp_NEI %>% left_join((tmp_NEI_direction), by= c("PlantName","source")) %>%
-  na.omit() %>% mutate(source = "NEI (Comprehensive point sources)")->plot_data
+  na.omit() %>% mutate(source = "NEI (Comprehensive point sources)") %>% dplyr::select(PlantName,Error_Term,Error_percent,Average_Emissions_KT,source) %>% distinct()->plot_data
 
 g <- ggplot(data=plot_data %>% filter(source == "NEI (Comprehensive point sources)"), aes(x=Error_Term, y=Error_percent, color=source))+
      geom_point(aes(size=Average_Emissions_KT),color="red")+
@@ -670,16 +670,26 @@ shape <- sqrt(log(1 + (s^2 / m^2)))
 draws3 <- dnorm(seq(-150, 150, length.out=56), 0, s)
 draw_d <- as.data.frame(draws3)  %>% 
           mutate(Error_percent = seq(-150, 150, length.out=56)) %>% 
-          rename(density = draws3 )
+ 
+           rename(density = draws3 )
+d <- density(na.omit(plot_data$Error_percent),n=1e4)
+xmax <- d$x[d$y==max(d$y)]
+x1 <- d$x[d$x < xmax][which.min(abs(d$y[d$x < xmax]-max(d$y)/2))]
+x2 <- d$x[d$x > xmax][which.min(abs(d$y[d$x > xmax]-max(d$y)/2))]
+
+FWHM <- as.integer(x2-x1)
 
 g <- ggplot()+
      geom_histogram(data= plot_data, aes(x=Error_percent, y = ..density..),fill = "white",color="black", bins = 20)+
-  geom_density(data= plot_data, aes(x=Error_percent, y = ..density..),color="red", size = 1.2)+
+  geom_density(data= plot_data, aes(x=Error_percent, y = ..density..,label="Smoothed density based on error distribution"),color="red", size = 1.2)+
   geom_line(data= draw_d, aes(x=Error_percent, y=density),color="blue", linetype = "dashed", size = 1.2)+
+  geom_text(data=plot_data, aes(x= max(300)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
+  geom_text(data=plot_data, aes(x= max(300)*0.77,y=max(0.0096),label= paste0("n - ",length(plot_data$PlantName))))+
+  #scale_linetype_manual(name = 'the fill', guide = 'legend',labels = c('m1')) +
   xlab("Mean percent error")+
   xlim(-150,300)+
   ggtitle("Density plot of percent error for all detected sources in the NEI inventory")+
-  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")
+  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve.FWHM is the Full Width at Half Maximum calculated for the distribution.")
 g+scheme_basic
 
 ggsave( paste0('Outputs/Density plot of percent error for all detected sources in the NEI inventory','.png'),width = 10, height = 6 )
@@ -774,7 +784,131 @@ g +scheme_basic
 
 ggsave( paste0('Outputs/Histogram of detections','_R','Alpha_ISOL_',alpha_isol," d_max= ",d_max," d_min= ",d_min,'.png'),width = 10, height = 6 )
 ```
+#SI Figure 1: Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 4 years of data)
+```{r}
+EGRIDS_Data_Mean %>%
+  mutate(Error=Value-ValuefromEGRIDSinKT) %>%
+  #Now filter out detected sources
+  filter(Status=="Detected",
+         Year %in% c(2010,2012,2014,2016)) %>%
+  #Add selection criteria. Add counts and calculate average emissions
+  mutate(Obs=1) %>%
+  group_by(PlantName) %>% 
+  mutate(obs_count=sum(Obs)) %>% 
+  ungroup() %>% 
+  group_by(PlantName) %>%
+  mutate(avg_em= mean(ValuefromEGRIDSinKT),Error=mean(Error)) %>%
+  ungroup() %>%
+  #Now, let's filter out on the basis of the criteria. Average emissions should be over 20 kt & you should
+  #have at least 3 observations
+  #filter(avg_em>20) %>%
+  filter(obs_count>=3) %>%
+  mutate(Error_percent= (Error/avg_em)*100, source="NEI",Valueplant = ValuefromEGRIDSinKT) %>% 
+  #Now let's calculate the data for the plot
+  select(PlantName,Error,Error_percent,source) %>%
+  distinct()->tmp_EGRIDS
 
+
+tmp_EGRIDS %>%  distinct() ->plot_data
+x <- seq(min(plot_data$Error_percent), max(plot_data$Error_percent), length.out=56)
+
+
+m <- mean(plot_data$Error_percent)
+s <- sd(plot_data$Error_percent)
+location <- log(m^2 / sqrt(s^2 + m^2))
+shape <- sqrt(log(1 + (s^2 / m^2)))
+
+draws3 <- dnorm(seq(-150, 150, length.out=56), 0,60 )
+draw_d <- as.data.frame(draws3)  %>% 
+          mutate(Error_percent = seq(-150, 150, length.out=56)) %>% 
+          rename(density = draws3 )
+
+d <- density(na.omit(plot_data$Error_percent),n=1e4)
+xmax <- d$x[d$y==max(d$y)]
+x1 <- d$x[d$x < xmax][which.min(abs(d$y[d$x < xmax]-max(d$y)/2))]
+x2 <- d$x[d$x > xmax][which.min(abs(d$y[d$x > xmax]-max(d$y)/2))]
+
+FWHM <- as.integer(x2-x1)
+
+unique_plants <- unique(plot_data$PlantName) 
+g <- ggplot()+
+     geom_histogram(data= plot_data, aes(x=Error_percent, y = ..density..),fill = "white",color="black", bins = 20)+
+  geom_density(data= plot_data, aes(x=Error_percent, y = ..density..),color="red", size = 1.2)+
+  geom_line(data= draw_d, aes(x=Error_percent, y=density),color="blue", linetype = "dashed", size = 1.2)+
+  geom_text(data=plot_data, aes(x= max(300)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
+  geom_text(data=plot_data, aes(x= max(300)*0.76,y=max(0.0096),label= paste0("n - ",length(plot_data$PlantName))))+
+  xlab("Mean percent error")+
+  xlim(-150,300)+
+  ggtitle("Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 4 years of data)")+
+  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")+
+  ylim(0,0.0125)
+g+scheme_basic
+
+ggsave( paste0('Outputs/Density plot of percent error for all detected sources in the EGRIDS inventory ( Last 4 years)','.png'),width = 10, height = 6 )
+```
+
+#SI Figure 2: Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 6 years of data)
+```{r}
+EGRIDS_Data_Mean %>%
+  mutate(Error=Value-ValuefromEGRIDSinKT) %>%
+  #Now filter out detected sources
+  filter(Status=="Detected") %>%
+  #Add selection criteria. Add counts and calculate average emissions
+  mutate(Obs=3) %>%
+  group_by(PlantName) %>% 
+  mutate(obs_count=sum(Obs)) %>% 
+  ungroup() %>% 
+  group_by(PlantName) %>%
+  mutate(avg_em= mean(ValuefromEGRIDSinKT),Error=mean(Error)) %>%
+  ungroup() %>%
+  #Now, let's filter out on the basis of the criteria. Average emissions should be over 20 kt & you should
+  #have at least 3 observations
+  #filter(avg_em>20) %>%
+  filter(obs_count>=3) %>%
+  mutate(Error_percent= (Error/avg_em)*100, source="NEI",Valueplant = ValuefromEGRIDSinKT) %>% 
+  #Now let's calculate the data for the plot
+  select(PlantName,Error,Error_percent,source) %>%
+  distinct()->tmp_EGRIDS
+
+
+tmp_EGRIDS %>%  distinct() %>% filter(PlantName %in% c(unique_plants))->plot_data
+x <- seq(min(plot_data$Error_percent), max(plot_data$Error_percent), length.out=56)
+
+
+m <- mean(plot_data$Error_percent)
+s <- sd(plot_data$Error_percent)
+location <- log(m^2 / sqrt(s^2 + m^2))
+shape <- sqrt(log(1 + (s^2 / m^2)))
+
+draws3 <- dnorm(seq(-150, 150, length.out=56), 0,60 )
+draw_d <- as.data.frame(draws3)  %>% 
+          mutate(Error_percent = seq(-150, 150, length.out=56)) %>% 
+          rename(density = draws3 )
+
+
+d <- density(na.omit(plot_data$Error_percent),n=1e4)
+xmax <- d$x[d$y==max(d$y)]
+x1 <- d$x[d$x < xmax][which.min(abs(d$y[d$x < xmax]-max(d$y)/2))]
+x2 <- d$x[d$x > xmax][which.min(abs(d$y[d$x > xmax]-max(d$y)/2))]
+
+FWHM <- as.integer(x2-x1)
+
+
+g <- ggplot()+
+     geom_histogram(data= plot_data, aes(x=Error_percent, y = ..density..),fill = "white",color="black", bins = 20)+
+  geom_density(data= plot_data, aes(x=Error_percent, y = ..density..),color="red", size = 1.2)+
+  geom_line(data= draw_d, aes(x=Error_percent, y=density),color="blue", linetype = "dashed", size = 1.2)+
+  geom_text(data=plot_data, aes(x= max(300)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
+  geom_text(data=plot_data, aes(x= max(300)*0.76,y=max(0.0096),label= paste0("n - ",length(plot_data$PlantName))))+
+  xlab("Mean percent error")+
+  xlim(-150,300)+
+  ggtitle("Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 6 years of data)")+
+  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")+
+  ylim(0,0.0125)
+g+scheme_basic
+
+ggsave( paste0('Outputs/Density plot of percent error for all detected sources in the EGRIDS inventory (6 years)','.png'),width = 10, height = 6 )
+```
 
 
 
