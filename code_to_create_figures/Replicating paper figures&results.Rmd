@@ -179,7 +179,7 @@ g <- ggplot()+
   geom_point(data = Isol_stats_EIA %>% bind_rows(Isol_stats_NEI, Isol_stats_EGRIDS), aes(x= Range, y = Error_isol),color="black",size=3)+
   #scale_x_continuous(breaks = c(unique(c(EGRIDS_years,NEI_years,EIA_years))))+
   ylab("Percent error")+
-  ggtitle("Percent error for detected sources for different radii")+
+  ggtitle("Percent error for sources included in catalog for different radii")+
   facet_wrap(~source)
 
 g + scheme_basic
@@ -192,7 +192,7 @@ ggsave( paste0('Outputs/Percent error for detected sources for different radii',
 ```{r,fig.height=6, fig.width=10}
 #Comparison of total emissions
 
-EGRIDS_Data_Mean %>% bind_rows(Eia_Data_Mean %>% filter(Year %notin% c(EGRIDS_years,NEI_years)),Nei_Data_Mean %>% filter(Year %notin% c(EGRIDS_years))) %>%  mutate(Valueplant=Value,source="OMI",count=1) %>% group_by(Range, Year,source) %>% mutate(Error_isol= (sum((Valueplant)))) %>%
+EGRIDS_Data_Mean %>% bind_rows(Eia_Data_Mean %>% filter(Year %notin% c(EGRIDS_years,NEI_years)),Nei_Data_Mean %>% filter(Year %notin% c(EGRIDS_years))) %>%  mutate(Valueplant=Value,source="OMI (Catalog)",count=1) %>% group_by(Range, Year,source) %>% mutate(Error_isol= (sum((Valueplant)))) %>%
                    #mutate(count=sum(reference_col)) %>% 
                    ungroup() %>% 
                    select(Range,Year,Error_isol,count,source) %>%
@@ -209,7 +209,7 @@ Eia_Data_Mean %>% mutate(source= "EIA") %>% rename(Valueplant= ValuefromEIAinKT)
                    mutate(count=sum(reference_col)) %>% 
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count,source) %>%
-                   distinct() %>% mutate(Status="1. Detected Emissions")->Isol_stats_Detected
+                   distinct() %>% mutate(Status="1. Included Emissions")->Isol_stats_Detected
                    
 
 Eia_Data_Mean %>% mutate(source= "EIA") %>% rename(Valueplant= ValuefromEIAinKT) %>% bind_rows(Nei_Data_Mean %>% mutate(source="NEI (Comprehensive point sources)") %>% rename(Valueplant= ValuefromNEIinKT),EGRIDS_Data_Mean %>% mutate(source="EGRIDS (point source database for powerplants)")%>% rename(Valueplant= ValuefromEGRIDSinKT)) %>% select(-ValuefromEIA,-ValuefromNEI, -ValuefromEGRIDS) %>%   na.omit() %>% 
@@ -228,18 +228,17 @@ Eia_Data_Mean %>% mutate(source= "EIA") %>% rename(Valueplant= ValuefromEIAinKT)
 
 
 
-g<-ggplot(data=bind_rows(Isol_stats_Detected) %>% filter(source != "EIA")  , aes(x=Year,y=Error_isol, color= "inventory")) +
-  scale_color_manual(values= c("black", "red"))+
+g<-ggplot(data=bind_rows(Isol_stats_Detected) %>% filter(source != "EIA") %>% mutate(inventory=source)  , aes(x=Year,y=Error_isol, color= source)) +
+  scale_color_manual(values= c("blue", "red", "black"))+
   geom_line()+
-  geom_line(data=bind_rows(OMI_Data %>% select(-source))  , aes(x=Year,y=Error_isol, color= "OMI data"), linetype = "solid",show.legend = FALSE)+
+  geom_line(data=bind_rows(OMI_Data %>% select(-source))  , aes(x=Year,y=Error_isol, color= "OMI data (Catalog)"), linetype = "solid",show.legend = FALSE,size=1.3)+
   geom_point(show.legend = FALSE)+
-  geom_point(data=bind_rows(OMI_Data %>% select(-source))  , aes(x=Year,y=Error_isol, color= "OMI data"),show.legend = FALSE)+
+  geom_point(data=bind_rows(OMI_Data %>% select(-source))  , aes(x=Year,y=Error_isol, color= "OMI data (Catalog)"),show.legend = FALSE)+
   scale_linetype_manual(values=c("solid","dotted","solid"))+
-  ggtitle(paste0("Total SO2 emissions detected sources in satellite and inventories")) +
+  ggtitle(paste0("Total SO2 emissions for included sources in catalog and inventories")) +
   ylab("Emissions in kt")+
   ylim(0,NA)+
-  labs(subtitle = paste0("Range for source aggregation - ",d_max, " kms"),caption="*Emissions here do not include emissions from Volcanoes")+scale_x_continuous(breaks = c(unique(c(EGRIDS_years,NEI_years,EIA_years))))+
-  facet_wrap(~source)
+  labs(subtitle = paste0("Range for source aggregation - ",d_max, " kms"),caption="*Emissions here do not include emissions from Volcanoes")+scale_x_continuous(breaks = c(unique(c(EGRIDS_years,NEI_years,EIA_years))))
  
 
 
@@ -249,7 +248,7 @@ ggsave( paste0('Outputs/Comparison of total emissions by isolation for detected 
 
 ```
 
-#Figure 3:Errors across years for detected sources (Percent and Total)
+#Figure 3:Errors across years for included sources (Percent and Total)
 ```{r,fig.height=6, fig.width=10}
 
 Eia_Data_Mean %>%  na.omit() %>% 
@@ -264,7 +263,7 @@ Eia_Data_Mean %>%  na.omit() %>%
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count) %>%
                    distinct() %>%   
-                   mutate(Type = "Total error (in kt)",source="1. EIA",Year= as.integer(Year))->Isol_stats_abs
+                   mutate(Type = "Total error (in kt/year)",source="1. EIA",Year= as.integer(Year))->Isol_stats_abs
 
 Nei_Data_Mean %>%  na.omit() %>% 
                    mutate(reference_col =1) %>% 
@@ -278,7 +277,7 @@ Nei_Data_Mean %>%  na.omit() %>%
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count) %>%
                    distinct() %>%   
-                   mutate(Type = "Total error (in kt)",Year= as.integer(Year),source="3. NEI")->Isol_stats_NEI_abs
+                   mutate(Type = "Total error (in kt/year)",Year= as.integer(Year),source="3. NEI")->Isol_stats_NEI_abs
 
 EGRIDS_Data_Mean %>%  na.omit() %>% 
                    mutate(reference_col =1) %>% 
@@ -292,7 +291,7 @@ EGRIDS_Data_Mean %>%  na.omit() %>%
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count) %>%
                    distinct() %>%   
-                   mutate(Type = "Total error (in kt)",source="2. EGRIDS",Year= as.integer(Year))->Isol_stats_EGRIDS_abs
+                   mutate(Type = "Total error (in kt/year)",source="2. EGRIDS",Year= as.integer(Year))->Isol_stats_EGRIDS_abs
 
 
 
@@ -308,7 +307,7 @@ Eia_Data_Mean %>%  na.omit() %>%
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count) %>%
                    distinct() %>% 
-                   mutate(Type ="Percent error",source="1. EIA",Year= as.integer(Year))->Isol_stats_percent
+                   mutate(Type ="Percent error per year",source="1. EIA",Year= as.integer(Year))->Isol_stats_percent
 
 Nei_Data_Mean %>%  na.omit() %>% 
                    mutate(reference_col =1) %>% 
@@ -322,7 +321,7 @@ Nei_Data_Mean %>%  na.omit() %>%
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count) %>%
                    distinct() %>%   
-                   mutate(Type ="Percent error",Year= as.integer(Year),source="3. NEI")->Isol_stats_NEI_percent
+                   mutate(Type ="Percent error per year",Year= as.integer(Year),source="3. NEI")->Isol_stats_NEI_percent
 
 EGRIDS_Data_Mean %>%  na.omit() %>% 
                    mutate(reference_col =1) %>% 
@@ -336,13 +335,13 @@ EGRIDS_Data_Mean %>%  na.omit() %>%
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count) %>%
                    distinct() %>%   
-                   mutate(Type ="Percent error",source="2. EGRIDS",Year= as.integer(Year))->Isol_stats_EGRIDS_percent
+                   mutate(Type ="Percent error per year",source="2. EGRIDS",Year= as.integer(Year))->Isol_stats_EGRIDS_percent
 
-EGRIDS_Data_Mean %>% filter((Error/ValuefromEGRIDSinKT)<2) %>% filter(Status=="Detected") %>%  na.omit() %>% mutate(Type= "Percent error",value=((Error)/ValuefromEGRIDSinKT)*100,Year= as.integer(Year))-> Jitter_data_percent
+EGRIDS_Data_Mean %>% filter((Error/ValuefromEGRIDSinKT)<2) %>% filter(Status=="Detected") %>%  na.omit() %>% mutate(Type= "Percent error per year",value=((Error)/ValuefromEGRIDSinKT)*100,Year= as.integer(Year))-> Jitter_data_percent
 
-EGRIDS_Data_Mean %>% filter((Error/ValuefromEGRIDSinKT)<2) %>% filter(Status=="Detected") %>%  na.omit() %>% mutate(Type= "Total error (in kt)",value=((Error)),Year= as.integer(Year))-> Jitter_data_abs
+EGRIDS_Data_Mean %>% filter((Error/ValuefromEGRIDSinKT)<2) %>% filter(Status=="Detected") %>%  na.omit() %>% mutate(Type= "Total error (in kt/year)",value=((Error)),Year= as.integer(Year))-> Jitter_data_abs
 
-Nei_Data_Mean %>%  filter((Error/ValuefromNEIinKT)<2) %>% filter(Status=="Detected") %>%  na.omit() %>% mutate(Type= "Percent error",value=((Error)/ValuefromNEIinKT)*100,Year= as.integer(Year))-> Jitter_data_print
+Nei_Data_Mean %>%  filter((Error/ValuefromNEIinKT)<2) %>% filter(Status=="Detected") %>%  na.omit() %>% mutate(Type= "Percent error per year",value=((Error)/ValuefromNEIinKT)*100,Year= as.integer(Year))-> Jitter_data_print
 
 
 g<-ggplot(data=Isol_stats_abs %>% bind_rows(Isol_stats_percent,Isol_stats_EGRIDS_abs,Isol_stats_EGRIDS_percent), aes(x=Year,y=Error_isol)) +
@@ -352,14 +351,16 @@ g<-ggplot(data=Isol_stats_abs %>% bind_rows(Isol_stats_percent,Isol_stats_EGRIDS
   geom_point(data=Isol_stats_NEI_abs %>% bind_rows(Isol_stats_NEI_percent),aes(x=Year,y=Error_isol,fill=source,color=source),size=2,show.legend = FALSE)+
   geom_jitter(data=Jitter_data_abs %>% bind_rows(Jitter_data_percent) ,aes(x=Year,y=value),show.legend = FALSE,size=0.7,width=0.1,color="grey")+
   #geom_text(data=Isol_stats_NEI_abs %>% bind_rows(Isol_stats_NEI_percent),aes(x=Year-0.5,y=Error_isol-7),label= "Error from NEI",size=2,show.legend = FALSE,color="black")+
-  ggtitle(paste0("Errors across years for detected sources (Percent and Total)")) +
-  ylab("Error")+
-  facet_wrap(~Type, scales="free_y") +
-  labs(subtitle = paste0("Range for source aggregation - ",d_max, " kms,  grey dots in each year represent point source values from EGRIDS"))+scale_x_continuous(breaks = c(unique(c(EGRIDS_years,NEI_years,EIA_years))))
+  ggtitle(paste0("Errors across years for included sources (Percent and Total)")) +
+  facet_wrap(~Type, scales="free_y",labeller = as_labeller(c(`Percent error per year`="Percent error per year (OMI- inventory)",
+                                                             `Total error (in kt/year)`="Error in kt/year (OMI- inventory)")),strip.position = "left") +
+  labs(subtitle = paste0("Range for source aggregation - ",d_max, " kms,  grey dots in each year represent point source values from EGRIDS"))+scale_x_continuous(breaks = c(unique(c(EGRIDS_years,NEI_years,EIA_years))))+
+  labs(y = NULL)
+  
  
 
 
-g+scheme_basic
+g+scheme_basic+theme(strip.background = element_blank(), strip.placement = "outside")
 
 ggsave( paste0('Outputs/Errors (OMI-inventory) across years for detected sources (Percent and unsigned)','_R','Alpha_ISOL_',alpha_isol," d_max= ",d_max," d_min= ",d_min,'.png'),width = 10, height = 6 )
 
@@ -446,11 +447,99 @@ g <- ggplot(data= tmp_EGRIDS %>% bind_rows(tmp_NEI), aes(x=bin, y=sd_value, colo
      scale_color_manual(values = c("blue", "red"))+
      geom_point(data=tmp_EGRIDS%>% bind_rows(tmp_NEI), aes(x=bin, y= mean_value, shape="mean",color= inventory),size=3)+
      ggtitle("Error statistics vs emissions (in bins) from EGRIDS and NEI")+
-   ylab("Percent error")+facet_wrap(~inventory)+xlab("Size of emissions in kt")+
-   labs(subtitle = "Observations with emissions under 10 kt are not included. Numbers represent count of detected sources (n) in all years")
+   ylab("Percent error")+facet_wrap(~inventory)+xlab("Size of emissions in kt/year")+
+   labs(subtitle = "Observations with emissions under 10 kt are not included. Numbers represent count of included sources (n) in all years")
 
 g+scheme_basic
 ggsave( paste0('Outputs/Error statistics vs emissions (in bins) from EGRIDS and NEI','.png'),width = 12, height = 6 )
+```
+```{r}
+
+
+EGRIDS_Data_Mean %>%
+  #First, calculate the error as OMI-EGRIDS
+  mutate(Error=abs(Value-ValuefromEGRIDSinKT)) %>%
+  #Now filter out detected sources
+  filter(Status=="Detected") %>%
+  #Add selection criteria. Add counts and calculate average emissions
+  mutate(Obs=1) %>%
+  group_by(PlantName) %>%
+  mutate(avg_em= mean(ValuefromEGRIDSinKT),obs_count=sum(Obs)) %>%
+  ungroup() %>%
+  #Now, let's filter out on the basis of the criteria. Average emissions should be over 20 kt & you should
+  #have at least 3 observations
+  #filter(avg_em>20) %>%
+  #filter(obs_count>=3) %>%
+  mutate(Error_percent= (Error/ValuefromEGRIDSinKT)*100) %>% 
+  #Now let's calculate the data for the plot
+  select(PlantName,Year,Error,Error_percent,ValuefromEGRIDSinKT) %>%
+  distinct() %>% 
+  mutate(bin = if_else(ValuefromEGRIDSinKT < 10 , "0-10",
+                       if_else(ValuefromEGRIDSinKT < 20,"10-20",
+                       if_else(ValuefromEGRIDSinKT < 25, "20-25",
+                       if_else(ValuefromEGRIDSinKT < 30, "25-30",
+                       if_else(ValuefromEGRIDSinKT < 35, "30-35",         
+                       if_else(ValuefromEGRIDSinKT < 40, "35-40",        
+                       if_else(ValuefromEGRIDSinKT < 60, "40-60",
+                               if_else(ValuefromEGRIDSinKT <80, "60-80",
+                                       if_else(ValuefromEGRIDSinKT <100, "80-100","Greater than 100")))))))))) %>% 
+  mutate(obs =1) %>% 
+  group_by(bin) %>% 
+  mutate(sd_value = sd(Error), mean_value = mean(Error),count=as.integer(sum(obs))) %>% 
+  ungroup() %>% 
+  select(bin, sd_value, mean_value, count) %>% 
+  distinct() %>% 
+  filter(bin != "0-10") %>% 
+  mutate(inventory = "1. EGRIDS (point sources for powerplants)")->tmp_EGRIDS
+Nei_Data_Mean %>%
+  #First, calculate the error as OMI-EGRIDS
+  mutate(Error=abs(Value-ValuefromNEIinKT)) %>%
+  #Now filter out detected sources
+  filter(Status=="Detected") %>%
+  #Add selection criteria. Add counts and calculate average emissions
+  mutate(Obs=1) %>%
+  group_by(PlantName) %>%
+  mutate(avg_em= mean(ValuefromNEIinKT),obs_count=sum(Obs)) %>%
+  ungroup() %>%
+  #Now, let's filter out on the basis of the criteria. Average emissions should be over 20 kt & you should
+  #have at least 3 observations
+  #filter(avg_em>20) %>%
+  #filter(obs_count>=3) %>%
+  mutate(Error_percent= (Error/ValuefromNEIinKT)*100) %>% 
+  #Now let's calculate the data for the plot
+  select(PlantName,Year,Error,Error_percent,ValuefromNEIinKT) %>%
+  distinct() %>% 
+  mutate(bin = if_else(ValuefromNEIinKT < 10 , "0-10",
+                       if_else(ValuefromNEIinKT < 20,"10-20",
+                       if_else(ValuefromNEIinKT < 25, "20-25",
+                       if_else(ValuefromNEIinKT < 30, "25-30",
+                       if_else(ValuefromNEIinKT < 35, "30-35",         
+                       if_else(ValuefromNEIinKT < 40, "35-40",        
+                       if_else(ValuefromNEIinKT < 60, "40-60",
+                               if_else(ValuefromNEIinKT <80, "60-80",
+                                       if_else(ValuefromNEIinKT <100, "80-100","Greater than 100")))))))))) %>% 
+  mutate(obs=1) %>% 
+  group_by(bin) %>% 
+  mutate(sd_value = sd(Error), mean_value = mean(Error),count=as.integer(sum(obs))) %>% 
+  ungroup() %>% 
+  select(bin, sd_value, mean_value,count) %>% 
+  distinct() %>% 
+  filter(bin != "0-10") %>% 
+  mutate(inventory= "2. NEI (Comprehensive point sources)")->tmp_NEI
+
+g <- ggplot(data= tmp_EGRIDS %>% bind_rows(tmp_NEI), aes(x=bin, y=sd_value, color=inventory))+
+     geom_point(aes(shape="standard deviation",color= inventory),size=8)+
+     geom_text(aes(x=bin,y=sd_value*1.25,label=paste0(count)),color="black")+
+     scale_shape_manual(values = c(16, 45))+
+     scale_color_manual(values = c("blue", "red"))+
+     geom_point(data=tmp_EGRIDS%>% bind_rows(tmp_NEI), aes(x=bin, y= mean_value, shape="mean",color= inventory),size=3)+
+     ggtitle("Error statistics vs emissions (in bins) from EGRIDS and NEI")+
+   ylab("Error in kt")+facet_wrap(~inventory)+xlab("Size of emissions in kt")+
+   labs(subtitle = "Observations with emissions under 10 kt are not included. Numbers represent count of included sources (n) in all years")
+
+g+scheme_basic
+ggsave( paste0('4b.OutputsError statistics vs emissions (in bins) from EGRIDS and NEI','.png'),width = 12, height = 6 )
+
 ```
 
 #Figure 5: Error over time (OMI - EGRIDS) in kt  by Plant
@@ -565,7 +654,7 @@ ggsave( paste0('Outputs/Error_Analysis_by_plant_over_time_free_scales_total erro
 ```
 
 
-#Figure 6:Size of bias (mean percent error) and Direction of bias (over vs underestimation) for detected sources"
+#Figure 6:Size of bias (mean percent error) and Direction of bias (over vs underestimation) for included sources"
 ```{r,fig.height=6,fig.width=10}
 
 
@@ -583,7 +672,7 @@ Nei_Data_Mean %>%
   ungroup() %>%
   #Now, let's filter out on the basis of the criteria. Average emissions should be over 20 kt & you should
   #have at least 3 observations
-  #filter(avg_em>20) %>%
+  #filter(avg_em>30) %>%
   filter(obs_count>=3) %>%
   mutate(Error_percent= (Error/avg_em)*100, source="NEI",Valueplant = ValuefromNEIinKT) %>% 
   #Now let's calculate the data for the plot
@@ -599,7 +688,7 @@ Nei_Data_Mean %>%
   filter(Status=="Detected") %>%   
   mutate(Obs=1) %>%
   #First, calculate the error as OMI-EIA
-  #filter(ValuefromNEIinKT > 30) %>% 
+  #filter(ValuefromNEIinKT >= 30) %>% 
   mutate(Error=Value-ValuefromNEIinKT) %>% 
   #Now filter out detected sources
   group_by(PlantName) %>% 
@@ -613,20 +702,21 @@ Nei_Data_Mean %>%
   select(PlantName,Error_Term,Average_Emissions_KT,count) %>%
   #left_join(tmp %>% select(PlantName,AverageEIAValue),by=c("PlantName")) %>% 
   distinct() %>%
+  #filter(avg_em>30) %>%
   filter(count >= 3) %>% 
   mutate(source=paste0("NEI"))->tmp_NEI_direction
 
 
 tmp_NEI %>% left_join((tmp_NEI_direction), by= c("PlantName","source")) %>%
-  na.omit() %>% mutate(source = "NEI (Comprehensive point sources)") %>% dplyr::select(PlantName,Error_Term,Error_percent,Average_Emissions_KT,source) %>% distinct()->plot_data
+  na.omit() %>% mutate(source = "NEI (Comprehensive point sources)") %>% dplyr::select(PlantName,Error_Term,Error,Average_Emissions_KT,source) %>% distinct()->plot_data
 
-g <- ggplot(data=plot_data %>% filter(source == "NEI (Comprehensive point sources)"), aes(x=Error_Term, y=Error_percent, color=source))+
+g <- ggplot(data=plot_data %>% filter(source == "NEI (Comprehensive point sources)"), aes(x=Error_Term, y=Error, color=source))+
      geom_point(aes(size=Average_Emissions_KT),color="red")+
      facet_wrap(~source)+
      geom_smooth(method = "glm", formula = "y ~ x", se = FALSE, color= "black", linetype = "dashed")+
      xlab("Direction score* (Direction of bias over time)")+
-     ylab("Mean percent error over time (Size of bias over time)")+
-     ggtitle("Size of bias (mean percent error) and Direction of bias (over vs underestimation) for detected sources")+
+     ylab("Mean error over time in kt (Size of bias over time)")+
+     ggtitle("Size of bias (mean error in kt) and Direction of bias (over vs underestimation) for included sources")+
      labs(caption = "*Direction score is the sum of Error (OMI-Inventory) divided by the sum of the absolute error by Plant. Direction score of 1 indicates consistent over estimate from OMI over time.")
 
 
@@ -650,7 +740,7 @@ Nei_Data_Mean %>%
   ungroup() %>%
   #Now, let's filter out on the basis of the criteria. Average emissions should be over 20 kt & you should
   #have at least 3 observations
-  #filter(avg_em>20) %>%
+  #filter(avg_em>30) %>%
   filter(obs_count>=3) %>%
   mutate(Error_percent= (Error/avg_em)*100, source="NEI",Valueplant = ValuefromNEIinKT) %>% 
   #Now let's calculate the data for the plot
@@ -659,20 +749,20 @@ Nei_Data_Mean %>%
 
 
 tmp_NEI %>%  distinct() ->plot_data
-x <- seq(min(plot_data$Error_percent), max(plot_data$Error_percent), length.out=56)
+x <- seq(min(plot_data$Error), max(plot_data$Error), length.out=56)
 
 
-m <- mean(plot_data$Error_percent)
-s <- sd(plot_data$Error_percent)
+m <- mean(plot_data$Error)
+s <- sd(plot_data$Error)
 location <- log(m^2 / sqrt(s^2 + m^2))
 shape <- sqrt(log(1 + (s^2 / m^2)))
 
-draws3 <- dnorm(seq(-150, 150, length.out=56), 0, s)
+draws3 <- dnorm(seq(-50, 50, length.out=43), 0, s)
 draw_d <- as.data.frame(draws3)  %>% 
-          mutate(Error_percent = seq(-150, 150, length.out=56)) %>% 
+          mutate(Error = seq(-50, 50, length.out=43)) %>% 
  
            rename(density = draws3 )
-d <- density(na.omit(plot_data$Error_percent),n=1e4)
+d <- density(na.omit(plot_data$Error),n=1e4)
 xmax <- d$x[d$y==max(d$y)]
 x1 <- d$x[d$x < xmax][which.min(abs(d$y[d$x < xmax]-max(d$y)/2))]
 x2 <- d$x[d$x > xmax][which.min(abs(d$y[d$x > xmax]-max(d$y)/2))]
@@ -680,15 +770,15 @@ x2 <- d$x[d$x > xmax][which.min(abs(d$y[d$x > xmax]-max(d$y)/2))]
 FWHM <- as.integer(x2-x1)
 
 g <- ggplot()+
-     geom_histogram(data= plot_data, aes(x=Error_percent, y = ..density..),fill = "white",color="black", bins = 20)+
-  geom_density(data= plot_data, aes(x=Error_percent, y = ..density..,label="Smoothed density based on error distribution"),color="red", size = 1.2)+
-  geom_line(data= draw_d, aes(x=Error_percent, y=density),color="blue", linetype = "dashed", size = 1.2)+
-  geom_text(data=plot_data, aes(x= max(300)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
-  geom_text(data=plot_data, aes(x= max(300)*0.77,y=max(0.0096),label= paste0("n - ",length(plot_data$PlantName))))+
+     geom_histogram(data= plot_data, aes(x=Error, y = ..density..),fill = "white",color="black", bins = 20)+
+  geom_density(data= plot_data, aes(x=Error, y = ..density..,label="Smoothed density based on error distribution"),color="red", size = 1.2)+
+  geom_line(data= draw_d, aes(x=Error, y=density),color="blue", linetype = "dashed", size = 1.2)+
+  geom_text(data=plot_data, aes(x= max(90)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
+  geom_text(data=plot_data, aes(x= max(90)*0.77,y=max(0.0090),label= paste0("n - ",length(plot_data$PlantName))))+
   #scale_linetype_manual(name = 'the fill', guide = 'legend',labels = c('m1')) +
-  xlab("Mean percent error")+
-  xlim(-150,300)+
-  ggtitle("Density plot of percent error for all detected sources in the NEI inventory")+
+  xlab("Mean error in kt")+
+  xlim(-75,90)+
+  ggtitle("Density plot of error for all included sources in the NEI inventory")+
   labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve.FWHM is the Full Width at Half Maximum calculated for the distribution.")
 g+scheme_basic
 
@@ -716,7 +806,7 @@ Eia_Data_Mean %>% mutate(source= "EIA (CEMS powerplants)") %>% rename(Valueplant
                    mutate(count=sum(reference_col)) %>% 
                    ungroup() %>% 
                    select(Range,Year,Error_isol,-reference_col,count,source) %>%
-                   distinct() %>% mutate(Status="1. Detected by satellite")->Isol_stats_Detected
+                   distinct() %>% mutate(Status="1. Included in catalog")->Isol_stats_Detected
                    
 
 Eia_Data_Mean %>% mutate(source= "EIA (CEMS powerplants)") %>% rename(Valueplant= ValuefromEIAinKT) %>% bind_rows(Nei_Data_Mean %>% mutate(source="NEI (Comprehensive point sources)") %>% rename(Valueplant= ValuefromNEIinKT),EGRIDS_Data_Mean %>% mutate(source="EGRIDS (powerplant point sources)")%>% rename(Valueplant= ValuefromEGRIDSinKT)) %>% select(-ValuefromEIA,-ValuefromNEI, -ValuefromEGRIDS) %>%   na.omit() %>% 
@@ -729,7 +819,7 @@ Eia_Data_Mean %>% mutate(source= "EIA (CEMS powerplants)") %>% rename(Valueplant
                    mutate(Error_isol= (sum((Valueplant)))) %>%
                    mutate(count=sum(reference_col)) %>% 
                    ungroup() %>% 
-                   select(Range,Year,Error_isol,-reference_col,count,source) %>% distinct() %>% mutate(Status="2. Undetected by satellite")->Isol_stats_Undetected
+                   select(Range,Year,Error_isol,-reference_col,count,source) %>% distinct() %>% mutate(Status="2. Not included in catalog")->Isol_stats_Undetected
                    
 
 
@@ -755,7 +845,7 @@ ggsave( paste0('Outputs/Comparison of total emissions by isolation for detected 
 # Figure 9:Distribution of emissions for sources by detection status* for all years for the NEI
 ```{r,fig.width=10,fig.height=6}
 Nei_Data_Mean %>% 
-  mutate(Status = if_else(Status !="Detected", "Undetected by satellite", "Detected by satellite")) %>% 
+  mutate(Status = if_else(Status !="Detected", "Not included in catalog", "Included in catalog")) %>% 
   mutate(bin = if_else(ValuefromNEIinKT < 5 , "0-5",
                        if_else(ValuefromNEIinKT < 10 , "5-10",
                        if_else(ValuefromNEIinKT < 20,"10-20",
@@ -774,7 +864,7 @@ t$bin <- factor(t$bin, levels = c("0-5","5-10","10-20","20-25",
 
 g <- ggplot(data =t %>% filter(bin != "0-5"), aes(x=bin, fill=Status))+
      geom_histogram(bins=30, color="black", stat="count", binwidth = 1)+
-     ggtitle("Distribution of emissions for sources by detection status* for all years for the NEI")+
+     ggtitle("Distribution of emissions for sources by inlusion status* for all years for the NEI")+
   labs(caption="*Radius for aggregation used here in 40 kms" )+
   ylab("Count")+
   xlab("Annual emissions in kt")
@@ -784,13 +874,49 @@ g +scheme_basic
 
 ggsave( paste0('Outputs/Histogram of detections','_R','Alpha_ISOL_',alpha_isol," d_max= ",d_max," d_min= ",d_min,'.png'),width = 10, height = 6 )
 ```
-#SI Figure 1: Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 4 years of data)
+
+##  SI Figure 3- Distribution of emissions for sources by inclusion status* for pre and post 2010 period.
+```{r}
+Nei_Data_Mean %>% 
+  mutate(Status = if_else(Status !="Detected", "Not included in catalog", "Included in catalog")) %>%
+  mutate(Category = if_else(Year <= 2010, "Pre 2010", "Post 2010")) %>% 
+  mutate(bin = if_else(ValuefromNEIinKT < 5 , "0-5",
+                       if_else(ValuefromNEIinKT < 10 , "5-10",
+                       if_else(ValuefromNEIinKT < 20,"10-20",
+                       if_else(ValuefromNEIinKT < 25, "20-25",
+                       if_else(ValuefromNEIinKT < 30, "25-30",
+                       if_else(ValuefromNEIinKT < 35, "30-35",         
+                       if_else(ValuefromNEIinKT < 40, "35-40",        
+                       if_else(ValuefromNEIinKT < 60, "40-60",
+                               if_else(ValuefromNEIinKT <80, "60-80",
+                                       if_else(ValuefromNEIinKT <100, "80-100","Greater than 100"))))))))))) %>% 
+  arrange(ValuefromNEIinKT)->t
+
+t$bin <- factor(t$bin, levels = c("0-5","5-10","10-20","20-25",
+                                  "25-30", "30-35","35-40","40-60",
+                                  "60-80","80-100","Greater than 100"))
+
+g <- ggplot(data =t %>% filter(bin != "0-5"), aes(x=bin, fill=Status))+
+     geom_histogram(bins=30, color="black", stat="count", binwidth = 1)+
+     ggtitle("Distribution of emissions for sources by inlusion status* for all years for the NEI")+
+  labs(caption="*Radius for aggregation used here in 40 kms" )+
+  ylab("Count")+
+  xlab("Annual emissions in kt")+
+  facet_wrap(~Category)
+  
+
+g +scheme_basic
+
+ggsave( paste0('Outputs/Histogram of detections','_R','Alpha_ISOL_',alpha_isol," d_max= ",d_max," d_min= ",d_min,'.png'),width = 10, height = 6 )
+```
+
+## SI Figure 1- Density plot of percent error for all included sources in the EGRIDS inventory (Based on first 3 years of data)
 ```{r}
 EGRIDS_Data_Mean %>%
   mutate(Error=Value-ValuefromEGRIDSinKT) %>%
   #Now filter out detected sources
   filter(Status=="Detected",
-         Year %in% c(2010,2012,2014,2016)) %>%
+         Year %in% c(2005,2007,2009)) %>%
   #Add selection criteria. Add counts and calculate average emissions
   mutate(Obs=1) %>%
   group_by(PlantName) %>% 
@@ -805,25 +931,25 @@ EGRIDS_Data_Mean %>%
   filter(obs_count>=3) %>%
   mutate(Error_percent= (Error/avg_em)*100, source="NEI",Valueplant = ValuefromEGRIDSinKT) %>% 
   #Now let's calculate the data for the plot
-  select(PlantName,Error,Error_percent,source) %>%
+  select(PlantName,Error,source) %>%
   distinct()->tmp_EGRIDS
 
 
 tmp_EGRIDS %>%  distinct() ->plot_data
-x <- seq(min(plot_data$Error_percent), max(plot_data$Error_percent), length.out=56)
+x <- seq(min(plot_data$Error), max(plot_data$Error), length.out=56)
 
 
-m <- mean(plot_data$Error_percent)
-s <- sd(plot_data$Error_percent)
+m <- mean(plot_data$Error)
+s <- sd(plot_data$Error)
 location <- log(m^2 / sqrt(s^2 + m^2))
 shape <- sqrt(log(1 + (s^2 / m^2)))
 
-draws3 <- dnorm(seq(-150, 150, length.out=56), 0,60 )
+draws3 <- dnorm(seq(-50, 50, length.out=56), 0,60 )
 draw_d <- as.data.frame(draws3)  %>% 
-          mutate(Error_percent = seq(-150, 150, length.out=56)) %>% 
+          mutate(Error = seq(-50, 50, length.out=56)) %>% 
           rename(density = draws3 )
 
-d <- density(na.omit(plot_data$Error_percent),n=1e4)
+d <- density(na.omit(plot_data$Error),n=1e4)
 xmax <- d$x[d$y==max(d$y)]
 x1 <- d$x[d$x < xmax][which.min(abs(d$y[d$x < xmax]-max(d$y)/2))]
 x2 <- d$x[d$x > xmax][which.min(abs(d$y[d$x > xmax]-max(d$y)/2))]
@@ -832,27 +958,28 @@ FWHM <- as.integer(x2-x1)
 
 unique_plants <- unique(plot_data$PlantName) 
 g <- ggplot()+
-     geom_histogram(data= plot_data, aes(x=Error_percent, y = ..density..),fill = "white",color="black", bins = 20)+
-  geom_density(data= plot_data, aes(x=Error_percent, y = ..density..),color="red", size = 1.2)+
-  geom_line(data= draw_d, aes(x=Error_percent, y=density),color="blue", linetype = "dashed", size = 1.2)+
-  geom_text(data=plot_data, aes(x= max(300)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
-  geom_text(data=plot_data, aes(x= max(300)*0.76,y=max(0.0096),label= paste0("n - ",length(plot_data$PlantName))))+
-  xlab("Mean percent error")+
-  xlim(-150,300)+
-  ggtitle("Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 4 years of data)")+
-  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")+
-  ylim(0,0.0125)
+     geom_histogram(data= plot_data, aes(x=Error, y = ..density..),fill = "white",color="black", bins = 20)+
+  geom_density(data= plot_data, aes(x=Error, y = ..density..),color="red", size = 1.2)+
+  #geom_line(data= draw_d, aes(x=Error, y=density),color="blue", linetype = "dashed", size = 1.2)+
+  geom_text(data=plot_data, aes(x= max(60)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
+  geom_text(data=plot_data, aes(x= max(60)*0.75,y=max(0.01*0.85),label= paste0("n - ",length(plot_data$PlantName))))+
+  xlab("Mean error in kt")+
+  xlim(-50,60)+
+  ggtitle("Density plot of percent error for all detected sources in the EGRIDS inventory (Based on first 3 years of data)")+
+  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")
+  #ylim(0,0.0125)
 g+scheme_basic
 
-ggsave( paste0('Outputs/Density plot of percent error for all detected sources in the EGRIDS inventory ( Last 4 years)','.png'),width = 10, height = 6 )
+ggsave( paste0('Outputs/Density plot of percent error for all detected sources in the EGRIDS inventory ( First 3 years)','.png'),width = 10, height = 6 )
 ```
 
-#SI Figure 2: Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 6 years of data)
+## SI Figure 2- Density plot of percent error for all unincluded sources in the EGRIDS inventory (Based on first 6 years of data)
 ```{r}
 EGRIDS_Data_Mean %>%
   mutate(Error=Value-ValuefromEGRIDSinKT) %>%
   #Now filter out detected sources
-  filter(Status=="Detected") %>%
+  filter(Status=="Detected",
+         !Year %in% c(max(EGRIDS_years))) %>%
   #Add selection criteria. Add counts and calculate average emissions
   mutate(Obs=3) %>%
   group_by(PlantName) %>% 
@@ -867,26 +994,26 @@ EGRIDS_Data_Mean %>%
   filter(obs_count>=3) %>%
   mutate(Error_percent= (Error/avg_em)*100, source="NEI",Valueplant = ValuefromEGRIDSinKT) %>% 
   #Now let's calculate the data for the plot
-  select(PlantName,Error,Error_percent,source) %>%
+  select(PlantName,Error,source) %>%
   distinct()->tmp_EGRIDS
 
 
 tmp_EGRIDS %>%  distinct() %>% filter(PlantName %in% c(unique_plants))->plot_data
-x <- seq(min(plot_data$Error_percent), max(plot_data$Error_percent), length.out=56)
+x <- seq(min(plot_data$Error), max(plot_data$Error), length.out=56)
 
 
-m <- mean(plot_data$Error_percent)
-s <- sd(plot_data$Error_percent)
+m <- mean(plot_data$Error)
+s <- sd(plot_data$Error)
 location <- log(m^2 / sqrt(s^2 + m^2))
 shape <- sqrt(log(1 + (s^2 / m^2)))
 
 draws3 <- dnorm(seq(-150, 150, length.out=56), 0,60 )
 draw_d <- as.data.frame(draws3)  %>% 
-          mutate(Error_percent = seq(-150, 150, length.out=56)) %>% 
+          mutate(Error = seq(-150, 150, length.out=56)) %>% 
           rename(density = draws3 )
 
 
-d <- density(na.omit(plot_data$Error_percent),n=1e4)
+d <- density(na.omit(plot_data$Error),n=1e4)
 xmax <- d$x[d$y==max(d$y)]
 x1 <- d$x[d$x < xmax][which.min(abs(d$y[d$x < xmax]-max(d$y)/2))]
 x2 <- d$x[d$x > xmax][which.min(abs(d$y[d$x > xmax]-max(d$y)/2))]
@@ -895,20 +1022,36 @@ FWHM <- as.integer(x2-x1)
 
 
 g <- ggplot()+
-     geom_histogram(data= plot_data, aes(x=Error_percent, y = ..density..),fill = "white",color="black", bins = 20)+
-  geom_density(data= plot_data, aes(x=Error_percent, y = ..density..),color="red", size = 1.2)+
-  geom_line(data= draw_d, aes(x=Error_percent, y=density),color="blue", linetype = "dashed", size = 1.2)+
-  geom_text(data=plot_data, aes(x= max(300)*0.8,y=max(0.01),label= paste0("FWHM - ",FWHM)))+
-  geom_text(data=plot_data, aes(x= max(300)*0.76,y=max(0.0096),label= paste0("n - ",length(plot_data$PlantName))))+
-  xlab("Mean percent error")+
-  xlim(-150,300)+
+     geom_histogram(data= plot_data, aes(x=Error, y = ..density..),fill = "white",color="black", bins = 20)+
+  geom_density(data= plot_data, aes(x=Error, y = ..density..),color="red", size = 1.2)+
+  #geom_line(data= draw_d, aes(x=Error, y=density),color="blue", linetype = "dashed", size = 1.2)+
+  geom_text(data=plot_data, aes(x= max(60)*0.8,y=max(0.02),label= paste0("FWHM - ",FWHM)))+
+  geom_text(data=plot_data, aes(x= max(60)*0.76,y=max(0.02*0.85),label= paste0("n - ",length(plot_data$PlantName))))+
+  xlab("Mean error in kt")+
+  xlim(-50,60)+
   ggtitle("Density plot of percent error for all detected sources in the EGRIDS inventory (Based on 6 years of data)")+
-  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")+
-  ylim(0,0.0125)
+  labs(subtitle = "Bars are the actual density of the error. The red line is a smoothed density curve")
+  #ylim(0,0.0125)
 g+scheme_basic
 
 ggsave( paste0('Outputs/Density plot of percent error for all detected sources in the EGRIDS inventory (6 years)','.png'),width = 10, height = 6 )
 ```
+## SI Figure 4 – QQ plot showing actual mean error in kt vs normalized mean error.
+```{r,fig.width=10,fig.height=6}
 
+g <- ggplot(data=Nei_Data_Mean %>% filter(Status =="Detected") %>% 
+              group_by(PlantName) %>% 
+              mutate(Error= mean(Error)) %>% 
+              ungroup() %>% 
+              select(PlantName,Error) %>% 
+              distinct(), aes(sample= Error))+stat_qq() + stat_qq_line()+
+xlab("Normalized mean error in kt")+
+ylab("Actual mean error in kt")  
+
+g+scheme_basic
+
+ggsave( paste0('Outputs/QQ plot showing normalized error vs actual error in kt for NEI inventory','.png'),width = 10, height = 6 )
+
+```
 
 
