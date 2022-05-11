@@ -1,4 +1,3 @@
-[[DOI(https://zenodo.org/badge/{https://github.com/JGCRI/Narayan_et_al_2022_ERL}.svg(https://zenodo.org/badge/latestdoi/{https://github.com/JGCRI/Narayan_et_al_2022_ERL})
 
 # Narayan_etal_2022_ERL
 
