@@ -1,4 +1,5 @@
-_your zenodo badge here_
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6561309.svg)](https://doi.org/10.5281/zenodo.6561309)
 
 # Narayan_etal_2022_ERL
 
