@@ -118,14 +118,14 @@ EGRIDS_Data_ISOL <- EGRIDS_Data_d_min %>%
 
 
 
-Eia_Data_Mean <- Get_Consolidated_OMI_Data(source= "EIA", startrange = d_max, endrange = d_max, rangesequence = 0,minvalue = 0,years=EIA_years) %>% 
+Eia_Data_Mean <- Get_Consolidated_OMI_Data(source= "EIA", startrange = dmax, endrange = dmax, rangesequence = 10,minvalue = 0,years=EIA_years) %>% 
                  inner_join(EIA_Data_ISOL, by= c("PlantName","Year"))
 
-Nei_Data_Mean <- bind_rows(Get_Consolidated_OMI_Data(source= "NEI", startrange = d_max, endrange = d_max, rangesequence = 0,minvalue = 0,years = NEI_years))         %>% 
+Nei_Data_Mean <- bind_rows(Get_Consolidated_OMI_Data(source= "NEI", startrange = dmax, endrange = dmax, rangesequence = 10,minvalue = 0,years = NEI_years))         %>% 
                  inner_join(NEI_Data_ISOL, by= c("PlantName","Year"))
 
 
-EGRIDS_Data_Mean <- bind_rows(Get_Consolidated_OMI_Data(source= "EGRIDS", startrange = d_max, endrange = d_max, rangesequence = 0,minvalue = 0,years = EGRIDS_years))         %>% 
+EGRIDS_Data_Mean <- bind_rows(Get_Consolidated_OMI_Data(source= "EGRIDS", startrange = dmax, endrange = dmax, rangesequence = 10,minvalue = 0,years = EGRIDS_years))         %>% 
                  inner_join(EGRIDS_Data_ISOL, by= c("PlantName","Year"))
 ```
 
@@ -178,8 +178,8 @@ g <- ggplot()+
   geom_jitter(data = Isol_stats_EIA %>% bind_rows(Isol_stats_NEI, Isol_stats_EGRIDS), aes(x= Range, y = Error),color="grey",width = 0.1)+
   geom_point(data = Isol_stats_EIA %>% bind_rows(Isol_stats_NEI, Isol_stats_EGRIDS), aes(x= Range, y = Error_isol),color="black",size=3)+
   #scale_x_continuous(breaks = c(unique(c(EGRIDS_years,NEI_years,EIA_years))))+
-  ylab("Percent error")+
-  ggtitle("Percent error for sources included in catalog for different radii")+
+  ylab("Error in kt/year")+
+  ggtitle("Error for sources included in catalog for different radii")+
   facet_wrap(~source)
 
 g + scheme_basic
