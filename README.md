@@ -1,7 +1,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6561309.svg)](https://doi.org/10.5281/zenodo.6561309)
 
-# Narayan_etal_2022_ERL
+# Narayan_etal_2022_EST
 
 **Evaluation of uncertainties in the anthropogenic SO2 emissions in the USA from NASA's OMI point source catalog**
 
