@@ -4,7 +4,9 @@
 # Narayan_etal_2023_ES&T
 
 **Evaluation of uncertainties in the anthropogenic SO2 emissions in the USA from the OMI point source catalog**
+
 *Accepted at Environmental Science and Technology
+
 Kanishka Narayan<sup>1\*</sup>,Steven J Smith <sup>1</sup>,
 ,Vitali E. Fioletov <sup>2</sup> & Chris A. McLinden <sup>2</sup>
 
