@@ -8,7 +8,7 @@
 *Accepted at Environmental Science and Technology
 
 Kanishka Narayan<sup>1\*</sup>,Steven J Smith <sup>1</sup>,
-,Vitali E. Fioletov <sup>2</sup> & Chris A. McLinden <sup>2</sup>
+Vitali E. Fioletov <sup>2</sup> & Chris A. McLinden <sup>2</sup>
 
 <sup>1 </sup> Joint Global Change Research Institute, Pacific Northwest National Lab, Washington DC, USA 
 
